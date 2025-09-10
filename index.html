@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trò chơi giải mã bản đồ kho báu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        .card {
+            background-color: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            transition: all 0.3s ease-in-out;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+        .btn {
+            transition: all 0.2s ease-in-out;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+            background-color: #9ca3af; /* Tailwind gray-400 */
+        }
+        /* Nút Kế Tiếp mới */
+        .btn-next {
+            background-color: #facc15; /* Tailwind yellow-400 */
+            color: #111827; /* Tailwind gray-900 */
+            font-weight: 700;
+        }
+        .btn-next:hover:not(:disabled) {
+            background-color: #f59e0b; /* Tailwind amber-500 */
+        }
+        .answer-btn.correct {
+            background-color: #22c55e !important;
+            color: white !important;
+            border-color: #16a34a !important;
+        }
+        .answer-btn.incorrect {
+            background-color: #ef4444 !important;
+            color: white !important;
+            border-color: #dc2626 !important;
+        }
+        #result-screen h1 {
+            animation: pop-in 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+        #final-score {
+             animation: score-pop 0.8s 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) backwards;
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes score-pop {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        #image-reveal-container {
+            position: relative;
+            aspect-ratio: 1.25 / 1; /* Adjusted for 5x4 grid */
+            overflow: hidden;
+            border-radius: 1rem;
+            background-color: #e2e8f0;
+        }
+        #image-tiles-grid {
+            position: absolute;
+            inset: 0;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr); /* 5x4 grid for 20 tiles */
+            gap: 2px;
+        }
+        .tile {
+            background-color: #374151;
+            transition: opacity 0.7s ease-in-out, transform 0.7s ease-in-out;
+            opacity: 1;
+            transform: scale(1);
+        }
+        .tile.revealed {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+    </style>
+</head>
+<!-- CẢI TIẾN: Thêm padding cho màn hình lớn hơn (md:p-8) -->
+<body class="flex items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
+
+    <!-- CẢI TIẾN: Tăng max-width để tận dụng không gian trên màn hình desktop -->
+    <div class="w-full max-w-5xl mx-auto">
+        <!-- Giao diện 1: Welcome Screen -->
+        <div id="welcome-screen" class="card p-6 sm:p-8 md:p-10 text-center max-w-2xl mx-auto">
+              <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
+                  <span>🧩 Giải mã bản đồ kho báu</span>
+              </h1>
+              <img src="https://i.postimg.cc/B60pfx8L/H-nh-n-n.png" alt="Giải mã bản đồ kho báu" class="w-full max-w-md mx-auto rounded-lg my-6">
+              <button id="welcome-next-btn" class="btn btn-next w-full py-3 px-6 rounded-lg shadow-lg">
+                  <span>Kế tiếp</span>
+              </button>
+        </div>
+
+        <!-- Giao diện 2: Instructions Screen -->
+        <div id="instructions-screen" class="card p-6 sm:p-8 md:p-10 text-center max-w-2xl mx-auto hidden">
+              <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Hướng dẫn chơi</h1>
+              <p class="text-gray-600 mb-6 text-left sm:text-center">Bằng cách trả lời đúng các câu hỏi, hãy giúp nhân vật từng bước lật giở các mảnh ghép để tìm ra tấm bản đồ bí ẩn chỉ đường tới Kho Báu. Bạn sẽ có trong tay tấm bản đồ hoàn chỉnh nếu trả lời đúng hết các câu hỏi.</p>
+              <img src="https://i.postimg.cc/sxR5hyPM/H-ng-d-n.png" alt="Hướng dẫn chơi" class="w-full max-w-md mx-auto rounded-lg my-6">
+              <button id="instructions-next-btn" class="btn btn-next w-full py-3 px-6 rounded-lg shadow-lg">
+                  <span>Kế tiếp</span>
+              </button>
+        </div>
+
+        <!-- Giao diện 3: Màn hình thông tin người chơi -->
+        <div id="start-screen" class="card p-6 sm:p-8 md:p-10 text-center max-w-2xl mx-auto hidden">
+              <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-3">
+                  <span>Thông tin người chơi</span>
+              </h1>
+              <div class="space-y-4 mb-6">
+                  <div class="relative">
+                      <i class="fa-solid fa-building absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                      <input type="text" id="department" placeholder="Nhập hoặc chọn bộ phận..." autocomplete="off" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                      <div id="department-suggestions" class="absolute z-20 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg hidden">
+                      </div>
+                  </div>
+                  <div class="relative">
+                      <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                      <input type="text" id="playerName" placeholder="Nhập họ và tên của bạn..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  </div>
+              </div>
+              <button id="start-btn" class="btn w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700" disabled>
+                  <i class="fa-solid fa-play"></i>
+                  <span>Bắt Đầu</span>
+              </button>
+              <p id="name-error" class="text-red-500 mt-4 hidden">Vui lòng nhập đầy đủ thông tin!</p>
+        </div>
+
+        <!-- Màn hình câu hỏi -->
+        <div id="quiz-screen" class="card p-4 sm:p-6 md:p-8 hidden">
+             <!-- CẢI TIẾN: Điều chỉnh khoảng cách (gap) theo kích thước màn hình -->
+            <div class="md:grid md:grid-cols-2 md:gap-6 lg:gap-8 items-start">
+                <!-- Cột bên trái: Hình ảnh -->
+                <div id="image-reveal-container" class="mb-6 md:mb-0">
+                    <img src="https://i.postimg.cc/QNpv1Scw/gia-tri-cot-loi-Toan-Phat.png" class="w-full h-full object-cover" alt="Hình ảnh bí ẩn" id="quiz-image">
+                    <div id="image-tiles-grid">
+                    </div>
+                </div>
+                <!-- Cột bên phải: Câu hỏi và trả lời -->
+                <div class="flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-4">
+                        <p class="text-sm font-medium text-gray-600 bg-gray-100 py-1 px-3 rounded-full flex items-center gap-2">
+                            <i class="fa-solid fa-list-ol text-gray-500"></i>
+                            <span>Câu <span id="current-question-number"></span> / 20</span>
+                        </p>
+                        <div class="text-lg font-bold text-blue-600 bg-blue-50 py-1 px-4 rounded-full flex items-center gap-2">
+                            <i class="fa-solid fa-star text-yellow-400"></i>
+                            <span>Điểm: <span id="score">0</span></span>
+                        </div>
+                    </div>
+                    <h2 id="question" class="text-md sm:text-lg font-semibold text-gray-800 mb-6 flex-grow flex items-center min-h-[120px]"></h2>
+                    <div id="answers" class="grid grid-cols-1 gap-3 mt-auto">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Màn hình kết quả -->
+        <div id="result-screen" class="card p-6 sm:p-8 hidden">
+            <!-- CẢI TIẾN: Điều chỉnh khoảng cách (gap) theo kích thước màn hình -->
+            <div class="md:grid md:grid-cols-2 md:gap-6 lg:gap-8 items-center">
+                <div id="result-image-container" class="mb-6 md:mb-0">
+                </div>
+                <div class="text-center">
+                    <i id="result-icon" class="fa-solid fa-trophy text-7xl mb-4"></i>
+                    <h1 id="result-title" class="text-2xl sm:text-3xl font-bold text-gray-800 mb-4"></h1>
+                    <p id="result-message" class="text-lg sm:text-xl text-gray-600 mb-6"></p>
+
+                    <p class="text-xl sm:text-2xl text-gray-700 mb-2">Điểm cuối cùng của bạn là:</p>
+                    <p class="text-5xl sm:text-6xl font-bold text-blue-600 mb-4" id="final-score"></p>
+                    
+                    <p id="effort-message" class="text-gray-600 mb-4 hidden"></p>
+
+                    <p id="submission-status" class="text-gray-500 mb-4 h-5"></p>
+                    <button id="restart-btn" class="btn w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700">
+                        <i class="fa-solid fa-rotate-right"></i>
+                        <span>Chơi Lại</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const departments = [
+            "Ban giám đốc", "Phòng kỹ thuật", "Phòng QAQC", "Bộ phận kho", "Phòng kế hoạch sản xuất", 
+            "Phòng vật tư", "Phòng xuất nhập khẩu", "Phòng kế toán tài chính", "Phòng hành chính nhân sự", 
+            "Phòng bán hàng nội", "Phòng bán hàng xuất khẩu", "Phòng phát triển hệ thống", "Phòng HSE", 
+            "Bộ phận bảo vệ", "Bộ phận điện", "Bộ phận cơ khí", "Bộ phận lò nấu", "Bộ phận ép phế", 
+            "Bộ phận phay - cán - kéo", "Bộ phận kéo thành phẩm", "Bộ phận kéo ống thẳng", "Bộ phận luồn xốp", 
+            "Bộ phận tang gỗ", "Bộ phận PC - LWC", "Bộ phận lò ủ", "Bộ phận đóng gói", "Bộ phận lái xe", 
+            "Bộ phận tạp vụ", "Bộ phận bếp"
+        ];
+        
+        const originalQuestions = [
+            { question: "Khi một nhân viên nhận thấy quy trình làm việc chưa hiệu quả nhưng vẫn im lặng, không đề xuất cải tiến, hành vi này phản ánh thiếu Bản lĩnh vươn mình.", answers: ["Đúng", "Sai"], correctAnswerIndex: 0 },
+            { question: "Nếu một nhân viên luôn tuân thủ nguyên tắc, minh bạch trong báo cáo nhưng không chia sẻ thông tin với đồng đội, hành vi này vẫn phù hợp với Đội hình hiệu quả.", answers: ["Đúng", "Sai"], correctAnswerIndex: 1 },
+            { question: "Một nhân viên luôn chủ động phối hợp liên phòng ban, chia sẻ thông tin và hỗ trợ đồng nghiệp, hành vi này thể hiện Đội hình hiệu quả.", answers: ["Đúng", "Sai"], correctAnswerIndex: 0 },
+            { question: "Khi nhân viên từ chối nhận nhiệm vụ mới vì sợ khó khăn, hành vi này thể hiện Bản lĩnh vươn mình.", answers: ["Đúng", "Sai"], correctAnswerIndex: 1 },
+            { question: "Khi phát hiện đồng nghiệp làm sai quy trình, bạn sẽ:", answers: ["Im lặng để tránh va chạm", "Báo cáo thẳng TGĐ", "Góp ý trực tiếp hoặc thông qua kênh phù hợp", "Để người khác xử lý"], correctAnswerIndex: 2 },
+            { question: "Giá trị Chính trực của công ty KHÔNG bao gồm:", answers: ["Trung thực trong công việc", "Dũng cảm nói lên điều đúng", "Tìm cách bao che sai phạm nhỏ", "Đáng tin cậy với đồng nghiệp"], correctAnswerIndex: 2 },
+            { question: "Nếu bạn hứa hoàn thành công việc hôm nay nhưng gặp khó khăn, bạn sẽ:", answers: ["Xin gia hạn và nêu rõ lý do", "Đùn đẩy cho đồng nghiệp", "Làm qua loa để kịp tiến độ", "Không báo cáo vì ngại"], correctAnswerIndex: 0 },
+            { question: "Hành vi nào thể hiện đúng tinh thần Trách nhiệm?", answers: ["Dám nhận lỗi khi mắc sai sót", "Chỉ làm đúng phần việc của mình, mặc kệ kết quả chung", "Tránh tham gia các công việc khó", "Chỉ báo cáo khi được hỏi"], correctAnswerIndex: 0 },
+            { question: "Khi làm việc nhóm, bạn nên ưu tiên điều gì?", answers: ["Kết quả chung của nhóm", "Lợi ích cá nhân trước tiên", "Hoàn thành phần việc rồi không cần quan tâm nhóm", "Tránh trao đổi để khỏi mất thời gian"], correctAnswerIndex: 0 },
+            { question: "Một nhóm làm việc hiệu quả được mô tả đúng nhất là:", answers: ["Ai giỏi thì tự làm, người khác đứng ngoài", "Mỗi người một vai trò, phối hợp nhịp nhàng", "Chỉ trưởng nhóm quyết định, thành viên không cần ý kiến", "Tập trung vào công việc của phòng ban riêng"], correctAnswerIndex: 1 },
+            { question: "Khi khách hàng phản ánh sản phẩm bị lỗi, bạn nên:", answers: ["Tranh luận để bảo vệ công ty", "Lắng nghe, ghi nhận và tìm hướng xử lý", "Đổ lỗi cho bộ phận sản xuất", "Im lặng cho qua"], correctAnswerIndex: 1 },
+            { question: "Tận tâm với khách hàng thể hiện rõ nhất ở:", answers: ["Chỉ quan tâm khi khách hàng lớn", "Luôn đặt sự hài lòng khách hàng lên hàng đầu", "Làm theo hợp đồng, không cần thêm hỗ trợ", "Ưu tiên sự tiện lợi của nhân viên hơn khách hàng"], correctAnswerIndex: 1 },
+            { question: "Khi công ty gặp khó khăn về thị trường, bạn sẽ:", answers: ["Tìm cách né tránh trách nhiệm", "Chấp nhận thử thách, cùng tìm giải pháp", "Đợi lãnh đạo xử lý", "Nản lòng và tìm công ty khác"], correctAnswerIndex: 1 },
+            { question: "Tinh thần Bản lĩnh vươn mình KHÔNG bao gồm:", answers: ["Sáng tạo, đổi mới", "Kiên cường vượt khó", "Dám cạnh tranh quốc tế", "Tránh thử thách để giữ an toàn"], correctAnswerIndex: 3 },
+            { question: "Giá trị “Cam kết & Trách nhiệm” thể hiện rõ nhất ở hành vi nào?", answers: ["Hoàn thành công việc đúng tiến độ đã hứa", "Chỉ làm khi có cấp trên giám sát", "Đùn đẩy cho đồng nghiệp khi gặp khó", "Làm qua loa để kịp thời hạn"], correctAnswerIndex: 0 },
+            { question: "Tại công ty cổ phần ống đồng Toàn Phát, giá trị \"Chính trực\" được hiểu là:", answers: ["Chúng ta sống và làm việc trung thực, có đạo đức, đáng tin cậy.", "Dũng cảm lên tiếng và hành động bảo vệ những điều đúng đắn trong công ty. ", "Chúng ta chịu hoàn toàn trách nhiệm cho các quyết định, hành động và kết quả của mình. Không đẩy trách nhiệm cho người khác.", "Đáp án a và c", "Đáp án a và b"], correctAnswerIndex: 4 },
+            { question: "Tại công ty cổ phần ống đồng Toàn Phát, giá trị \"Đội hình hiệu quả\" được hiểu:", answers: ["Tối ưu chi phí và chất lượng ổn định bằng tinh thần kỷ luật và áp dụng sáng kiến cải tiến. Hiệu quả phải đo lường được bằng dẫn chứng số liệu", "Làm đúng cam kết bằng việc thực hiện đúng quy trình, không làm dối hay làm tắt. Làm điều hiệu quả nhất cho công ty.", "Tuyển dụng đào tạo và giữ chân nhân viên xuất sắc trong một đội ngũ gắn kết với nhau, được ghi nhận và tôn vinh xứng đáng.", "Đáp án a và c", "Đáp án a và b"], correctAnswerIndex: 3 },
+            { question: "Tại công ty cổ phần ống đồng Toàn Phát, giá trị \"Bản lĩnh vươn mình\" được hiểu:", answers: ["Liên tục học hỏi để trở thành phiên bản tốt nhất của chính mình", "Kiên cường vượt qua mọi thách thức", "Nỗ lực đưa bản thân và doanh nghiệp lên tầm cao mới", "Đáp án a,b,c", "Đáp án b và c"], correctAnswerIndex: 3 },
+            { question: "Nếu đồng nghiệp nhờ bạn “giấu” một lỗi nhỏ để không bị trừ KPI, bạn sẽ:", answers: ["Đồng ý để không làm mất lòng", "Từ chối và đề xuất cách xử lý minh bạch", "Giấu lỗi nhưng ghi chú trong sổ riêng", "Không quan tâm"], correctAnswerIndex: 1 },
+            { question: "Khi dự án gặp khó khăn ngoài khả năng kiểm soát, bạn sẽ:", answers: ["Tìm cách né tránh", "Báo cáo sớm và cùng nhóm tìm giải pháp", "Chờ lãnh đạo xử lý", "Lơ đi và tiếp tục công việc khác"], correctAnswerIndex: 1 }
+        ];
+
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzRqoj6245tM95fweTRXeHH9qnMoDPCApkDU-JEbN_wZg6km3vJL0U-2wXWc-_kelI5/exec';
+
+        // DOM Elements
+        const welcomeScreen = document.getElementById('welcome-screen');
+        const instructionsScreen = document.getElementById('instructions-screen');
+        const startScreen = document.getElementById('start-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const resultScreen = document.getElementById('result-screen');
+
+        const welcomeNextBtn = document.getElementById('welcome-next-btn');
+        const instructionsNextBtn = document.getElementById('instructions-next-btn');
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        
+        const playerNameInput = document.getElementById('playerName');
+        const departmentInput = document.getElementById('department');
+        const departmentSuggestions = document.getElementById('department-suggestions');
+        const nameError = document.getElementById('name-error');
+        const currentQuestionNumberEl = document.getElementById('current-question-number');
+        const scoreEl = document.getElementById('score');
+        const questionEl = document.getElementById('question');
+        const answersEl = document.getElementById('answers');
+        const imageRevealContainer = document.getElementById('image-reveal-container');
+        const imageTilesGrid = document.getElementById('image-tiles-grid');
+        
+        const resultIcon = document.getElementById('result-icon');
+        const resultTitle = document.getElementById('result-title');
+        const resultMessage = document.getElementById('result-message');
+        const effortMessage = document.getElementById('effort-message');
+        const finalScoreEl = document.getElementById('final-score');
+        const submissionStatusEl = document.getElementById('submission-status');
+        const resultImageContainer = document.getElementById('result-image-container');
+
+        // State variables
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let playerName = '';
+        let department = '';
+        let userAnswers = [];
+        let tiles = [];
+        let correctAnswersCount = 0;
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startGame() {
+            playerName = playerNameInput.value.trim();
+            department = departmentInput.value.trim();
+            if (!playerName || !departments.includes(department)) {
+                nameError.classList.remove('hidden');
+                return;
+            }
+            nameError.classList.add('hidden');
+            
+            questions = [...originalQuestions]; 
+            shuffleArray(questions);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            correctAnswersCount = 0;
+            userAnswers = [];
+            scoreEl.textContent = score;
+            startScreen.classList.add('hidden');
+            resultScreen.classList.add('hidden');
+            quizScreen.classList.remove('hidden');
+            createImageTiles();
+            showQuestion();
+        }
+
+        function createImageTiles() {
+            imageTilesGrid.innerHTML = '';
+            tiles = [];
+            for (let i = 0; i < questions.length; i++) {
+                const tile = document.createElement('div');
+                tile.classList.add('tile');
+                tiles.push(tile);
+                imageTilesGrid.appendChild(tile);
+            }
+            shuffleArray(tiles);
+        }
+
+        function showQuestion() {
+            resetState();
+            const currentQuestion = questions[currentQuestionIndex];
+            currentQuestionNumberEl.textContent = currentQuestionIndex + 1;
+            questionEl.textContent = currentQuestion.question;
+            currentQuestion.answers.forEach((answer, index) => {
+                const button = document.createElement('button');
+                button.innerHTML = `<span>${answer}</span>`;
+                button.classList.add('btn', 'answer-btn', 'w-full', 'justify-start', 'p-4', 'border-2', 'border-gray-300', 'rounded-lg', 'text-left', 'hover:bg-gray-100');
+                button.dataset.index = index;
+                button.addEventListener('click', handleAnswerSelection);
+                answersEl.appendChild(button);
+            });
+        }
+        
+        function resetState() {
+            while (answersEl.firstChild) {
+                answersEl.removeChild(answersEl.firstChild);
+            }
+        }
+
+        function handleAnswerSelection(e) {
+            Array.from(answersEl.children).forEach(button => {
+                button.disabled = true;
+            });
+
+            const selectedButton = e.currentTarget;
+            const selectedIndex = parseInt(selectedButton.dataset.index, 10);
+            userAnswers[currentQuestionIndex] = selectedButton.textContent;
+            
+            const currentQ = questions[currentQuestionIndex];
+            const correctIndex = currentQ.correctAnswerIndex;
+            const correctButton = answersEl.querySelector(`[data-index='${correctIndex}']`);
+
+            if (selectedIndex === correctIndex) {
+                selectedButton.classList.add('correct');
+                score += 10;
+                scoreEl.textContent = score;
+                revealTile();
+            } else {
+                selectedButton.classList.add('incorrect');
+                correctButton.classList.add('correct');
+            }
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    showQuestion();
+                } else {
+                    showResult();
+                }
+            }, 2000);
+        }
+
+        function revealTile() {
+            if (correctAnswersCount < tiles.length) {
+                tiles[correctAnswersCount].classList.add('revealed');
+                correctAnswersCount++;
+            }
+        }
+
+        function showResult() {
+            quizScreen.classList.add('hidden');
+            resultScreen.classList.remove('hidden');
+            
+            finalScoreEl.textContent = `${score}/${questions.length * 10}`;
+            resultImageContainer.innerHTML = ''; 
+            const finalImageContainer = imageRevealContainer.cloneNode(true);
+            resultImageContainer.appendChild(finalImageContainer);
+
+            if (correctAnswersCount === questions.length) {
+                // Win State
+                resultIcon.className = 'fa-solid fa-trophy text-7xl text-yellow-400 mb-4';
+                resultTitle.textContent = 'Hoàn Thành!';
+                resultMessage.innerHTML = `Chúc mừng, <span class="font-bold text-blue-600">${playerName}</span>!`;
+                effortMessage.classList.add('hidden');
+            } else {
+                // Lose State
+                resultIcon.className = 'fa-solid fa-heart-crack text-7xl text-red-400 mb-4';
+                resultTitle.textContent = 'Chưa Hoàn Thành!';
+                resultMessage.innerHTML = `Tiếc quá, <span class="font-bold text-blue-600">${playerName}</span> ơi!`;
+                effortMessage.textContent = 'Hãy cố gắng lật hết các mảnh ghép để chiến thắng nha!';
+                effortMessage.classList.remove('hidden');
+            }
+
+            submitScore();
+        }
+        
+        function submitScore() {
+            if (!WEB_APP_URL) {
+                submissionStatusEl.textContent = "Chưa cấu hình URL để gửi điểm.";
+                submissionStatusEl.classList.add('text-yellow-600');
+                return;
+            }
+            submissionStatusEl.textContent = "Đang gửi kết quả...";
+            submissionStatusEl.classList.remove('text-green-600', 'text-red-600', 'text-sm');
+            restartBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('Họ tên', playerName);
+            formData.append('Bộ phận', department);
+            for(let i = 0; i < questions.length; i++) {
+                const questionText = questions[i].question;
+                const userAnswerText = userAnswers[i] || 'Chưa trả lời';
+                formData.append(`Câu hỏi ${i + 1}`, questionText);
+                formData.append(`Trả lời ${i + 1}`, userAnswerText);
+            }
+            formData.append('Điểm số', score);
+
+            fetch(WEB_APP_URL, { method: 'POST', body: formData, })
+            .then(response => { if (!response.ok) { throw new Error(`Lỗi mạng: ${response.statusText}`); } return response.json(); })
+            .then(data => {
+                if (data.result === 'success') {
+                    submissionStatusEl.textContent = "Đã gửi kết quả thành công!";
+                    submissionStatusEl.classList.add('text-green-600');
+                } else {
+                    throw new Error(JSON.stringify(data.error) || 'Lỗi không xác định từ Google Apps Script');
+                }
+            })
+            .catch(error => {
+                console.error('Chi tiết lỗi gửi điểm:', error);
+                let userMessage = "Gửi kết quả thất bại.";
+                if (error.message.includes('{}') || error.message.includes('Unexpected token')) {
+                    userMessage = "Lỗi! Vui lòng kiểm tra lại Google Sheet và Apps Script.";
+                    submissionStatusEl.classList.add('text-sm');
+                } else { userMessage = `Gửi thất bại: ${error.message}`; }
+                submissionStatusEl.innerHTML = userMessage;
+                submissionStatusEl.classList.add('text-red-600');
+            })
+            .finally(() => {
+                restartBtn.disabled = false;
+            });
+        }
+
+        function restartGame() {
+            resultScreen.classList.add('hidden');
+            welcomeScreen.classList.remove('hidden');
+            playerNameInput.value = '';
+            departmentInput.value = '';
+            validateStartForm(); // Ensure button is disabled on restart
+        }
+        
+        function validateStartForm() {
+            const departmentValue = departmentInput.value.trim();
+            const playerNameValue = playerNameInput.value.trim();
+            const isDepartmentValid = departments.includes(departmentValue);
+
+            if (isDepartmentValid && playerNameValue) {
+                startBtn.disabled = false;
+                startBtn.classList.remove('bg-gray-400', 'opacity-50');
+                startBtn.classList.add('bg-blue-600');
+            } else {
+                startBtn.disabled = true;
+                startBtn.classList.remove('bg-blue-600');
+                startBtn.classList.add('bg-gray-400', 'opacity-50');
+            }
+        }
+
+
+        startBtn.addEventListener('click', startGame);
+        restartBtn.addEventListener('click', restartGame);
+
+        welcomeNextBtn.addEventListener('click', () => {
+            welcomeScreen.classList.add('hidden');
+            instructionsScreen.classList.remove('hidden');
+        });
+
+        instructionsNextBtn.addEventListener('click', () => {
+            instructionsScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+        });
+
+        departmentInput.addEventListener('input', validateStartForm);
+        playerNameInput.addEventListener('input', validateStartForm);
+
+        departmentInput.addEventListener('input', () => {
+            const inputText = departmentInput.value.toLowerCase().trim();
+            departmentSuggestions.innerHTML = '';
+            if (inputText.length === 0) {
+                departmentSuggestions.classList.add('hidden');
+                return;
+            }
+            
+            const filteredDepartments = departments.filter(dept => 
+                dept.toLowerCase().includes(inputText)
+            );
+
+            if (filteredDepartments.length > 0) {
+                filteredDepartments.forEach(dept => {
+                    const item = document.createElement('div');
+                    item.textContent = dept;
+                    item.classList.add('p-3', 'cursor-pointer', 'hover:bg-gray-100', 'text-left');
+                    item.addEventListener('click', () => {
+                        departmentInput.value = dept;
+                        departmentSuggestions.classList.add('hidden');
+                        validateStartForm(); // Xác thực sau khi chọn
+                    });
+                    departmentSuggestions.appendChild(item);
+                });
+                departmentSuggestions.classList.remove('hidden');
+            } else {
+                departmentSuggestions.classList.add('hidden');
+            }
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!departmentInput.contains(e.target) && !departmentSuggestions.contains(e.target)) {
+                departmentSuggestions.classList.add('hidden');
+            }
+        });
+        
+    </script>
+</body>
+</html>
+
