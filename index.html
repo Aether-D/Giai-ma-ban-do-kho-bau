@@ -33,16 +33,16 @@
         .btn:disabled {
             cursor: not-allowed;
             opacity: 0.5;
-            background-color: #9ca3af; /* Tailwind gray-400 */
+            background-color: #9ca3af;
         }
         /* Nút Kế Tiếp mới */
         .btn-next {
-            background-color: #facc15; /* Tailwind yellow-400 */
-            color: #111827; /* Tailwind gray-900 */
+            background-color: #facc15;
+            color: #111827;
             font-weight: 700;
         }
         .btn-next:hover:not(:disabled) {
-            background-color: #f59e0b; /* Tailwind amber-500 */
+            background-color: #f59e0b;
         }
         .answer-btn.correct {
             background-color: #22c55e !important;
@@ -58,7 +58,7 @@
             animation: pop-in 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
         }
         #final-score {
-             animation: score-pop 0.8s 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) backwards;
+            animation: score-pop 0.8s 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) backwards;
         }
         @keyframes pop-in {
             0% { transform: scale(0.5); opacity: 0; }
@@ -70,7 +70,7 @@
         }
         #image-reveal-container {
             position: relative;
-            aspect-ratio: 1.25 / 1; /* Adjusted for 5x4 grid */
+            aspect-ratio: 1.25 / 1;
             overflow: hidden;
             border-radius: 1rem;
             background-color: #e2e8f0;
@@ -80,7 +80,7 @@
             inset: 0;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            grid-template-rows: repeat(4, 1fr); /* 5x4 grid for 20 tiles */
+            grid-template-rows: repeat(4, 1fr);
             gap: 2px;
         }
         .tile {
@@ -102,52 +102,52 @@
     <div class="w-full max-w-5xl mx-auto">
         <!-- Giao diện 1: Welcome Screen -->
         <div id="welcome-screen" class="card p-6 sm:p-8 md:p-10 text-center max-w-2xl mx-auto">
-              <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
-                  <span>🧩 Giải mã bản đồ kho báu</span>
-              </h1>
-              <img src="https://i.postimg.cc/B60pfx8L/H-nh-n-n.png" alt="Giải mã bản đồ kho báu" class="w-full max-w-md mx-auto rounded-lg my-6">
-              <button id="welcome-next-btn" class="btn btn-next w-full py-3 px-6 rounded-lg shadow-lg">
-                  <span>Kế tiếp</span>
-              </button>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4 flex items-center justify-center gap-3">
+                <span>🧩 Giải mã bản đồ kho báu</span>
+            </h1>
+            <img src="https://i.postimg.cc/B60pfx8L/H-nh-n-n.png" alt="Giải mã bản đồ kho báu" class="w-full max-w-md mx-auto rounded-lg my-6">
+            <button id="welcome-next-btn" class="btn btn-next w-full py-3 px-6 rounded-lg shadow-lg">
+                <span>Kế tiếp</span>
+            </button>
         </div>
 
         <!-- Giao diện 2: Instructions Screen -->
         <div id="instructions-screen" class="card p-6 sm:p-8 md:p-10 text-center max-w-2xl mx-auto hidden">
-              <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Hướng dẫn chơi</h1>
-              <p class="text-gray-600 mb-6 text-left sm:text-center">Bằng cách trả lời đúng các câu hỏi, hãy giúp nhân vật từng bước lật giở các mảnh ghép để tìm ra tấm bản đồ bí ẩn chỉ đường tới Kho Báu. Bạn sẽ có trong tay tấm bản đồ hoàn chỉnh nếu trả lời đúng hết các câu hỏi.</p>
-              <img src="https://i.postimg.cc/sxR5hyPM/H-ng-d-n.png" alt="Hướng dẫn chơi" class="w-full max-w-md mx-auto rounded-lg my-6">
-              <button id="instructions-next-btn" class="btn btn-next w-full py-3 px-6 rounded-lg shadow-lg">
-                  <span>Kế tiếp</span>
-              </button>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-4">Hướng dẫn chơi</h1>
+            <p class="text-gray-600 mb-6 text-left sm:text-center">Bằng cách trả lời đúng các câu hỏi, hãy giúp nhân vật từng bước lật giở các mảnh ghép để tìm ra tấm bản đồ bí ẩn chỉ đường tới Kho Báu. Bạn sẽ có trong tay tấm bản đồ hoàn chỉnh nếu trả lời đúng hết các câu hỏi.</p>
+            <img src="https://i.postimg.cc/sxR5hyPM/H-ng-d-n.png" alt="Hướng dẫn chơi" class="w-full max-w-md mx-auto rounded-lg my-6">
+            <button id="instructions-next-btn" class="btn btn-next w-full py-3 px-6 rounded-lg shadow-lg">
+                <span>Kế tiếp</span>
+            </button>
         </div>
 
         <!-- Giao diện 3: Màn hình thông tin người chơi -->
         <div id="start-screen" class="card p-6 sm:p-8 md:p-10 text-center max-w-2xl mx-auto hidden">
-              <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-3">
-                  <span>Thông tin người chơi</span>
-              </h1>
-              <div class="space-y-4 mb-6">
-                  <div class="relative">
-                      <i class="fa-solid fa-building absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
-                      <input type="text" id="department" placeholder="Nhập hoặc chọn bộ phận..." autocomplete="off" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                      <div id="department-suggestions" class="absolute z-20 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg hidden">
-                      </div>
-                  </div>
-                  <div class="relative">
-                      <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                      <input type="text" id="playerName" placeholder="Nhập họ và tên của bạn..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  </div>
-              </div>
-              <button id="start-btn" class="btn w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700" disabled>
-                  <i class="fa-solid fa-play"></i>
-                  <span>Bắt Đầu</span>
-              </button>
-              <p id="name-error" class="text-red-500 mt-4 hidden">Vui lòng nhập đầy đủ thông tin!</p>
+            <h1 class="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 mb-6 flex items-center justify-center gap-3">
+                <span>Thông tin người chơi</span>
+            </h1>
+            <div class="space-y-4 mb-6">
+                <div class="relative">
+                    <i class="fa-solid fa-building absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 z-10"></i>
+                    <input type="text" id="department" placeholder="Nhập hoặc chọn bộ phận..." autocomplete="off" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <div id="department-suggestions" class="absolute z-20 w-full bg-white border border-gray-300 rounded-lg mt-1 max-h-60 overflow-y-auto shadow-lg hidden">
+                    </div>
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-user absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <input type="text" id="playerName" placeholder="Nhập họ và tên của bạn..." class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+            <button id="start-btn" class="btn w-full bg-blue-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700" disabled>
+                <i class="fa-solid fa-play"></i>
+                <span>Bắt Đầu</span>
+            </button>
+            <p id="name-error" class="text-red-500 mt-4 hidden">Vui lòng nhập đầy đủ thông tin!</p>
         </div>
 
         <!-- Màn hình câu hỏi -->
         <div id="quiz-screen" class="card p-4 sm:p-6 md:p-8 hidden">
-             <!-- CẢI TIẾN: Điều chỉnh khoảng cách (gap) theo kích thước màn hình -->
+            <!-- CẢI TIẾN: Điều chỉnh khoảng cách (gap) theo kích thước màn hình -->
             <div class="md:grid md:grid-cols-2 md:gap-6 lg:gap-8 items-start">
                 <!-- Cột bên trái: Hình ảnh -->
                 <div id="image-reveal-container" class="mb-6 md:mb-0">
@@ -202,7 +202,7 @@
 
     <script>
         const departments = [
-            "Ban giám đốc", ”Ban kiểm soát”, "Phòng kỹ thuật", "Phòng QAQC", "Bộ phận kho", "Phòng kế hoạch sản xuất", 
+            "Ban giám đốc", "Ban kiểm soát", "Phòng kỹ thuật", "Phòng QAQC", "Bộ phận kho", "Phòng kế hoạch sản xuất", 
             "Phòng vật tư", "Phòng xuất nhập khẩu", "Phòng kế toán tài chính", "Phòng hành chính nhân sự", 
             "Phòng bán hàng nội", "Phòng bán hàng xuất khẩu", "Phòng phát triển hệ thống", "Phòng HSE", 
             "Bộ phận bảo vệ", "Bộ phận điện", "Bộ phận cơ khí", "Bộ phận lò nấu", "Bộ phận ép phế", 
@@ -293,7 +293,7 @@
             }
             nameError.classList.add('hidden');
             
-            questions = [...originalQuestions]; 
+            questions = [...originalQuestions];
             shuffleArray(questions);
 
             currentQuestionIndex = 0;
@@ -386,7 +386,7 @@
             resultScreen.classList.remove('hidden');
             
             finalScoreEl.textContent = `${score}/${questions.length * 10}`;
-            resultImageContainer.innerHTML = ''; 
+            resultImageContainer.innerHTML = '';
             const finalImageContainer = imageRevealContainer.cloneNode(true);
             resultImageContainer.appendChild(finalImageContainer);
 
